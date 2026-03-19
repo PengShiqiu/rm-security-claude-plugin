@@ -1,0 +1,21 @@
+{
+  "name": "rm-security",
+  "version": "1.0.0",
+  "description": "Claude Code 删除操作安全拦截插件 - 拦截 rm 及各种删除命令，保护系统安全",
+  "author": {
+    "name": "pengsq",
+    "email": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "security",
+    "rm",
+    "delete",
+    "protection",
+    "interceptor"
+  ],
+  "license": "MIT"
+}

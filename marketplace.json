@@ -1,0 +1,14 @@
+{
+  "name": "rm-security-plugin",
+  "description": "Claude Code 安全插件集合 - 防止 Agent 意外删除文件",
+  "owner": {
+    "name": "pengsq"
+  },
+  "plugins": [
+    {
+      "name": "rm-interceptor",
+      "version": "1.0.0",
+      "source": "./"
+    }
+  ]
+}

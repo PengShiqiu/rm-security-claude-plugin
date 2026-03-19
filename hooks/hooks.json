@@ -1,0 +1,27 @@
+{
+  "description": "拦截 rm 及各种删除命令的 Hook 配置，包含脚本内容检测",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "description": "拦截 Bash 中的删除命令",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/rm-interceptor.sh"
+          }
+        ]
+      },
+      {
+        "description": "检测写入的脚本内容是否包含危险命令",
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/script-content-checker.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
