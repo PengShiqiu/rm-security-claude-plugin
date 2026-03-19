@@ -321,8 +321,8 @@ check_dangerous() {
         return 0
     fi
 
-    # 21. dd 覆盖删除（用 /dev/null 清空文件）
-    if echo "$cmd" | grep -qE '\bdd\b.*if=/dev/null.*of='; then
+    # 21. dd 覆盖删除（用 /dev/null 清空文件，支持参数顺序交换）
+    if echo "$cmd" | grep -qE '\bdd\b.*(if=/dev/null.*of=|of=.*if=/dev/null)'; then
         echo "通过 dd 覆盖文件"
         return 0
     fi
