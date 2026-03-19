@@ -216,8 +216,9 @@ check_dangerous() {
         return 0
     fi
 
-    # 5. xargs rm
-    if echo "$cmd" | grep -qE '\bxargs\b.*\brm\b'; then
+    # 5. xargs rm (确保 rm 是独立命令，不是字符串的一部分如 "rm-pending")
+    # rm 后面必须是空格或行尾，不能是连字符或字母（排除 rm-pending, rmtree 等）
+    if echo "$cmd" | grep -qE '\bxargs\b.*\brm[[:space:]]|\bxargs\b.*\brm$'; then
         echo "通过 xargs 调用 rm"
         return 0
     fi
@@ -320,8 +321,8 @@ check_dangerous() {
         return 0
     fi
 
-    # 21. dd 覆盖删除
-    if echo "$cmd" | grep -qE '\bdd\s+.*of=.*if=/dev/null'; then
+    # 21. dd 覆盖删除（用 /dev/null 清空文件）
+    if echo "$cmd" | grep -qE '\bdd\b.*if=/dev/null.*of='; then
         echo "通过 dd 覆盖文件"
         return 0
     fi
@@ -344,9 +345,9 @@ check_dangerous() {
         return 0
     fi
 
-    # 25. 检测引号内的 rm
-    if echo "$cmd" | grep -qE '(echo|printf|eval).*["'\''].*\brm\b'; then
-        echo "通过字符串构造调用 rm"
+    # 25. 检测通过 eval 构造调用 rm（echo/printf 本身不会执行命令）
+    if echo "$cmd" | grep -qE '\beval\b.*["'\''].*\brm([[:space:]]|$)'; then
+        echo "通过 eval 构造调用 rm"
         return 0
     fi
 
@@ -356,8 +357,11 @@ check_dangerous() {
         # 提取脚本路径
         local script_path=$(echo "$cmd" | grep -oE '[^[:space:]]+\.sh' | head -1)
         if [ -n "$script_path" ] && [ -f "$script_path" ]; then
-            # 检查脚本内容是否包含危险命令
-            if grep -qE '(^|[[:space:];&|])rm([[:space:]]|$)|os\.(remove|unlink|rmdir)|shutil\.rmtree|unlink\(' "$script_path" 2>/dev/null; then
+            # 白名单：插件自身目录下的脚本不检查（避免自拦截）
+            if echo "$script_path" | grep -qE 'rm-security-claude-plugin|rm-interceptor|rm-pending'; then
+                : # 跳过检查
+            # 检查脚本内容是否包含危险命令（排除注释和字符串中的提示）
+            elif grep -qE '^[^#]*\brm([[:space:]]|$)|os\.(remove|unlink|rmdir)|shutil\.rmtree|unlink\(' "$script_path" 2>/dev/null; then
                 echo "执行包含删除命令的脚本: $script_path"
                 return 0
             fi
@@ -368,7 +372,10 @@ check_dangerous() {
     if echo "$cmd" | grep -qE 'python[23]?\s+.*\.py'; then
         local script_path=$(echo "$cmd" | grep -oE '[^[:space:]]+\.py' | head -1)
         if [ -n "$script_path" ] && [ -f "$script_path" ]; then
-            if grep -qE 'os\.(remove|unlink|rmdir)|shutil\.rmtree' "$script_path" 2>/dev/null; then
+            # 白名单：插件自身目录和测试脚本
+            if echo "$script_path" | grep -qE 'rm-security-claude-plugin|rm-interceptor|rm-pending|test-rm'; then
+                : # 跳过检查
+            elif grep -qE 'os\.(remove|unlink|rmdir)|shutil\.rmtree' "$script_path" 2>/dev/null; then
                 echo "执行包含删除操作的 Python 脚本: $script_path"
                 return 0
             fi
