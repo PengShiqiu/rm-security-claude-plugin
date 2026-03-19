@@ -357,9 +357,12 @@ check_dangerous() {
         # 提取脚本路径
         local script_path=$(echo "$cmd" | grep -oE '[^[:space:]]+\.sh' | head -1)
         if [ -n "$script_path" ] && [ -f "$script_path" ]; then
-            # 白名单：插件自身目录下的脚本不检查（避免自拦截）
-            if echo "$script_path" | grep -qE 'rm-security-claude-plugin|rm-interceptor|rm-pending'; then
-                : # 跳过检查
+            # 安全白名单：只允许特定插件目录（使用完整路径匹配，防止路径混淆攻击）
+            local real_path=$(readlink -f "$script_path" 2>/dev/null || echo "$script_path")
+            if [[ "$real_path" == *"/rm-security-claude-plugin/"* ]] || \
+               [[ "$real_path" == *"/.claude/plugins/cache/rm-security-plugin/"* ]] || \
+               [[ "$real_path" == *"/.claude/hooks/scripts/rm-"* ]]; then
+                : # 跳过检查 - 只允许这些特定路径模式
             # 检查脚本内容是否包含危险命令（排除注释和字符串中的提示）
             elif grep -qE '^[^#]*\brm([[:space:]]|$)|os\.(remove|unlink|rmdir)|shutil\.rmtree|unlink\(' "$script_path" 2>/dev/null; then
                 echo "执行包含删除命令的脚本: $script_path"
@@ -372,9 +375,13 @@ check_dangerous() {
     if echo "$cmd" | grep -qE 'python[23]?\s+.*\.py'; then
         local script_path=$(echo "$cmd" | grep -oE '[^[:space:]]+\.py' | head -1)
         if [ -n "$script_path" ] && [ -f "$script_path" ]; then
-            # 白名单：插件自身目录和测试脚本
-            if echo "$script_path" | grep -qE 'rm-security-claude-plugin|rm-interceptor|rm-pending|test-rm'; then
-                : # 跳过检查
+            # 安全白名单：使用完整路径匹配和符号链接解析
+            local real_path=$(readlink -f "$script_path" 2>/dev/null || echo "$script_path")
+            if [[ "$real_path" == *"/rm-security-claude-plugin/"* ]] || \
+               [[ "$real_path" == *"/.claude/plugins/cache/rm-security-plugin/"* ]] || \
+               [[ "$real_path" == *"/.claude/hooks/scripts/rm-"* ]] || \
+               [[ "$real_path" == *"/test-rm-security"* ]]; then
+                : # 跳过检查 - 只允许这些特定路径模式
             elif grep -qE 'os\.(remove|unlink|rmdir)|shutil\.rmtree' "$script_path" 2>/dev/null; then
                 echo "执行包含删除操作的 Python 脚本: $script_path"
                 return 0
