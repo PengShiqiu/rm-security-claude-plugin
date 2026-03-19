@@ -6,10 +6,7 @@
     "name": "pengsq",
     "email": ""
   },
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
+  "repository": "",
   "keywords": [
     "security",
     "rm",

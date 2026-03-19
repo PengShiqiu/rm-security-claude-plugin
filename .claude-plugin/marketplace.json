@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "rm-security-plugin",
+  "description": "Claude Code 安全插件集合 - 防止 Agent 意外删除文件",
+  "owner": {
+    "name": "pengsq",
+    "email": ""
+  },
+  "plugins": [
+    {
+      "name": "rm-interceptor",
+      "description": "删除操作安全拦截插件 - 拦截 rm 及 25+ 种删除命令逃逸方式",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "pengsq",
+        "email": ""
+      },
+      "category": "security"
+    }
+  ]
+}
